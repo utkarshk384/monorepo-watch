@@ -1,0 +1,37 @@
+{
+  "bin": {
+    "watcher": "dist/main/index.js"
+  },
+  "types": "dist/types",
+  "name": "monorepo-watcher",
+  "version": "0.0.1",
+  "description": "A package that watches specific file/dir and it's dependencies regardless of the bundler used.",
+  "main": "dist/main/index.js",
+  "repository": "https://github.com/Utkarsh-Kumar384/monorepo-watcher.git",
+  "author": "Utkarsh Kumar",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "dev": "yarn build && npm uninstall . && npm  i -g ."
+  },
+  "devDependencies": {
+    "@types/chalk": "^2.2.0",
+    "@types/lodash.debounce": "^4.0.6",
+    "@types/minimist": "^1.2.2",
+    "@types/node": "^16.4.13",
+    "chalk": "^4.1.2",
+    "typescript": "^4.3.5"
+  },
+  "peerDependencies": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@manypkg/find-root": "^1.1.0",
+    "@manypkg/get-packages": "^1.1.1",
+    "chokidar": "^3.5.2",
+    "lodash.debounce": "^4.0.8",
+    "minimist": "^1.2.5",
+    "minimist-options": "^4.1.0"
+  }
+}
