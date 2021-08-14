@@ -3,23 +3,22 @@
     "watcher": "dist/main/index.js"
   },
   "keywords": [
-    "monorepo-watcher",
+    "monorepo-watch",
     "file-watcher",
     "lerna-watcher"
   ],
   "types": "dist/types",
-  "name": "@utkarshk384/monorepo-watcher",
+  "name": "monorepo-watch",
   "version": "0.0.1",
   "description": "A package that for monorepos that watches a specific package and it's dependencies.",
   "main": "dist/main/index.js",
-  "repository": "https://github.com/utkarshk384/monorepo-watcher.git",
-  "homepage": "https://github.com/utkarshk384/monorepo-watcher",
+  "repository": "https://github.com/utkarshk384/monorepo-watch.git",
+  "homepage": "https://github.com/utkarshk384/monorepo-watch",
   "author": "Utkarsh Kumar",
   "license": "MIT",
   "private": false,
   "publishConfig": {
-    "access": "public",
-    "registry": "https://npm.pkg.github.com/@utkarshk384"
+    "access": "public"
   },
   "type": "commonjs",
   "scripts": {
@@ -42,7 +41,7 @@
     "typescript": "^4.3.5"
   },
   "bugs": {
-    "url": "https://github.com/Utkarshk384/monorepo-watcher/issues"
+    "url": "https://github.com/Utkarshk384/monorepo-watch/issues"
   },
   "peerDependencies": {
     "node": ">=14.0.0"

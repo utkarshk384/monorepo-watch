@@ -12,13 +12,13 @@ A fully customizable file watcher for projects using lerna, yarn workspaces, and
 ## Installation
 
 ```sh
-npm install --save monorepo-watcher
+npm install --save monorepo-watch
 ```
 
 or
 
 ```sh
-yarn add monorepo-watcher
+yarn add monorepo-watch
 ```
 
 <br/>
@@ -43,7 +43,7 @@ lerna.json
 watcher.config.js <--root
 ```
 
-See [configuration](https://https://github.com/Utkarshk384/monorepo-watcher#Configuration) section below on how to configure your watcher.
+See [configuration](https://https://github.com/Utkarshk384/monorepo-watch#Configuration) section below on how to configure your watcher.
 
 2. Now run the follow command from any of your packages to get the watcher running.
    <br/>
