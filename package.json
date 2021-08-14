@@ -8,17 +8,18 @@
     "lerna-watcher"
   ],
   "types": "dist/types",
-  "name": "monorepo-watcher",
+  "name": "@utkarshk384/monorepo-watcher",
   "version": "0.0.1",
   "description": "A package that for monorepos that watches a specific package and it's dependencies.",
   "main": "dist/main/index.js",
-  "repository": "https://github.com/Utkarsh-Kumar384/monorepo-watcher.git",
-  "homepage": "https://github.com/Utkarshk384/monorepo-watcher",
+  "repository": "https://github.com/utkarshk384/monorepo-watcher.git",
+  "homepage": "https://github.com/utkarshk384/monorepo-watcher",
   "author": "Utkarsh Kumar",
   "license": "MIT",
   "private": false,
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://npm.pkg.github.com/@utkarshk384"
   },
   "type": "commonjs",
   "scripts": {
