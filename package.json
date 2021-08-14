@@ -9,7 +9,7 @@
   ],
   "types": "dist/types",
   "name": "monorepo-watch",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A package that for monorepos that watches a specific package and it's dependencies.",
   "main": "dist/main/index.js",
   "repository": "https://github.com/utkarshk384/monorepo-watch.git",
