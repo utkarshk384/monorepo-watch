@@ -1,8 +1,9 @@
 import fs from "fs";
 import chokidar from "chokidar";
 import debounce from "lodash.debounce";
-import Logger, { LoggerType } from "../helpers/logger";
 
+import Logger, { LoggerType } from "../helpers/logger";
+import { FILENAME } from "../helpers/consts";
 import { InterpretFile, WriteFile } from "../helpers/file-writer";
 
 import type { EventAction, WatcherConfig } from "../types";
@@ -14,7 +15,7 @@ abstract class Events {
   protected logger: LoggerType;
 
   constructor(config: WatcherConfig) {
-    this.instance = chokidar.watch(config.watchFiles, config.options);
+    this.instance = chokidar.watch(config.include, config.options);
     this.root = config.root;
     this.actions = config.actions;
     this.logger = Logger();
@@ -30,33 +31,37 @@ abstract class Events {
 
   protected onAdd() {
     this.instance.on("add", (path, stats) => {
-      this.actions.add(path, stats);
+      this.instance.add(path);
+      this.actions.add?.(path, stats);
 
-      this.finalLogger("add", path);
+      this.finalLogger("Add", path);
     });
   }
 
   protected onAddDir() {
     this.instance.on("addDir", (path, stats) => {
-      this.actions.addDir(path, stats);
+      this.instance.add(path);
+      this.actions.addDir?.(path, stats);
 
-      this.finalLogger("addDir", path);
+      this.finalLogger("Add Dir", path);
     });
   }
 
   protected onUnlink() {
     this.instance.on("unlink", (path) => {
-      this.actions.unlink(path);
+      this.instance.unwatch(path);
+      this.actions.unlink?.(path);
 
-      this.finalLogger("unlink", path);
+      this.finalLogger("Remove", path);
     });
   }
 
   protected onUnlinkDir() {
     this.instance.on("unlinkDir", (path) => {
-      this.actions.unlinkDir(path);
+      this.instance.unwatch(path);
+      this.actions.unlinkDir?.(path);
 
-      this.finalLogger("unlinkDir", path);
+      this.finalLogger("Remove Dir", path);
     });
   }
 
@@ -73,14 +78,14 @@ abstract class Events {
             return;
           }
   
-          if (stats.size === InterpretFile(this.root, path)) {
+          if (stats.size === InterpretFile(FILENAME, path)) {
             this.logger.Sucessful({
               message: "No changes in file recorded",
               clr: true,
             });
             return;
           }
-          WriteFile(this.root, stats.size, path);
+          WriteFile(FILENAME, stats.size, path);
   
           this.logger.Log({ message: "Performing Action", clr: true });
           this.logger.Info(`File changed ${this.convertPath(path)}`);
@@ -88,7 +93,7 @@ abstract class Events {
           this.actions.change(path, stats);
   
 
-          this.finalLogger("change", path)
+          this.finalLogger("Change", path)
         }, 500, { maxWait: 750 }
       ));
   }
@@ -97,7 +102,7 @@ abstract class Events {
     this.logger.Log({ message: "Action Completed", clr: true });
     this.logger.Log({
       custom: (chalk) =>
-        `${chalk.bgGreen.black(event)} - ${chalk.white(
+        `${chalk.bgGreen.black(`  ${event}  `)} - ${chalk.white(
           this.convertPath(path)
         )}`,
       br: true,

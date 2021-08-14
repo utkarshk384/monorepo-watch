@@ -1,57 +1,59 @@
 import fs from "fs";
 import path from "path";
 
-import type { Dict } from "../types";
-
-const FILE_NAME = ".sizes.json";
+import { ROOT } from "./consts";
 
 /* 
   Exports
 */
 export const WriteFile = (
-  root: string,
+  fileName: string,
   fileSize: number,
   filePath: string
 ): void => {
-  createFile(root);
-  const parsedData = readFile(root);
+  CreateFile(fileName);
+  const parsedData = readFile(fileName);
   parsedData[filePath] = fileSize;
 
   const data = JSON.stringify(parsedData);
 
-  fs.writeFileSync(path.join(root, FILE_NAME), data, "utf-8");
+  fs.writeFileSync(path.join(ROOT, fileName), data, "utf-8");
 };
 
 export const InterpretFile = (
-  root: string,
+  fileName: string,
   filePath: string
 ): number | null => {
-  const parsedData = readFile(root);
+  const parsedData = readFile(fileName);
   const entry = parsedData[filePath] || null;
 
   return entry;
 };
 
-export const RemoveFile = (root: string) => {
-  fs.rmSync(path.join(root, FILE_NAME));
+export const RemoveFile = (fileName: string) => {
+  try {
+    fs.rmSync(path.join(ROOT, fileName));
+  } catch (err) {
+    // Ignore
+  }
+};
+
+export const CreateFile = (fileName: string) => {
+  const exists = fs.existsSync(path.join(ROOT, fileName));
+
+  if (!exists) {
+    const data = JSON.stringify({});
+    fs.writeFileSync(path.join(ROOT, fileName), data, "utf-8");
+  }
+  return exists;
 };
 
 /* 
   Helpers
 */
-const createFile = (root: string) => {
-  const exists = fs.existsSync(path.join(root, `/${FILE_NAME}`));
-
-  if (!exists) {
-    const data = JSON.stringify({});
-    fs.writeFileSync(path.join(root, FILE_NAME), data, "utf-8");
-  }
-  return exists;
-};
-
-const readFile = (root: string): Dict<number> => {
-  createFile(root);
-  const payload = fs.readFileSync(path.join(root, FILE_NAME), "utf8");
+const readFile = (fileName: string) => {
+  CreateFile(fileName);
+  const payload = fs.readFileSync(path.join(ROOT, fileName), "utf8");
 
   return JSON.parse(payload);
 };

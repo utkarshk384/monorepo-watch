@@ -17,9 +17,15 @@ const clr = () => {
 
     descriptor.value = function (params: LoggerActions | string) {
       if (typeof params !== "string") {
+        /* For spacing */
+        params.message = `  ${params.message}  `;
         if (params.clr) target.ClearScreen();
         originalMethod(params);
-      } else originalMethod(params);
+      } else {
+        /* For spacing */
+        params = `  ${params}  `;
+        originalMethod(params);
+      }
     };
 
     return descriptor;
@@ -49,7 +55,7 @@ class LoggerBase {
   @clr()
   public Sucessful(params: LoggerActions | string) {
     if (typeof params === "string") {
-      console.log(chalk.bgGreen.black(params));
+      console.log(`chalk.bgGreen.black(params)`);
       return;
     }
     let br = params.br ? "\n" : "";

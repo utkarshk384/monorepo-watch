@@ -1,30 +1,32 @@
 import chokidar from "chokidar";
 
 import Events from "./events";
-import { RemoveFile } from "../helpers/file-writer";
+import { RemoveFile, CreateFile } from "../helpers/file-writer";
+import { FILENAME } from "../helpers/consts";
 
 import type { WatcherConfig } from "../types";
 
-class WatcherBase extends Events {
+export class WatcherBase extends Events {
   constructor(config: WatcherConfig) {
     super(config);
-    this.instance = chokidar.watch(config.watchFiles, config.options);
+    this.instance = chokidar.watch(config.include, config.options);
     this.setupExtend();
   }
 
   private setupExtend() {
     this.onReady();
     super.setup();
+    CreateFile(FILENAME);
     this.handleSigint();
   }
 
   private close() {
     this.instance.close().then(() => {
-      RemoveFile(this.root);
       this.logger.Log({
         message: "Sucessfully stopped watching files",
         clr: true,
       });
+      RemoveFile(FILENAME);
     });
   }
 
