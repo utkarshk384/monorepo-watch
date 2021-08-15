@@ -34,10 +34,11 @@ const resolve = Resolver({
   Watch Files
 */
 const include = resolve.ExtractDependencies();
-console.log(include);
+
 const watcher: WatcherBase = Watcher({
   root: root.dir,
   include,
+  packages,
   options: config.options,
   actions: config.actions,
 });

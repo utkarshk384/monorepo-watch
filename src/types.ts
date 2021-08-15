@@ -29,19 +29,22 @@ export type WatcherConfig = {
 };
 
 /* Event Types */
+export type EventConfig = WatcherConfig & {
+  packages: Package[];
+};
+
 export type EventAction = {
-  add?: (path: string, stats?: Stats) => any;
-  addDir?: (path: string, stats?: Stats) => any;
-  unlink?: (path: string) => any;
-  unlinkDir?: (path: string) => any;
-  change: (path: string, stats?: Stats) => any;
+  add?: (path: string, currentPkg: string, stats?: Stats) => Promise<any>;
+  addDir?: (path: string, currentPkg: string, stats?: Stats) => Promise<any>;
+  unlink?: (path: string, currentPkg: string) => Promise<any>;
+  unlinkDir?: (path: string, currentPkg: string) => Promise<any>;
+  change: (path: string, currentPkg: string, stats?: Stats) => Promise<any>;
 };
 
 /* Logger Types */
 export type LoggerActions = {
   message: string;
   clr?: boolean;
-  br?: boolean;
 };
 
 /* Config Types */

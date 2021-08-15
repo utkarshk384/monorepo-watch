@@ -11,7 +11,6 @@ const output = [
     name: "monorepo-watch",
     format: "esm",
     exports: "named",
-    chunkFileNames: "[name].mjs",
     sourcemap: true,
     preserveModules: true,
     preserveModulesRoot: "src",

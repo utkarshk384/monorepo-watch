@@ -43,13 +43,9 @@ class LoggerBase {
       console.log(chalk.white(params));
       return;
     }
-    let br = params.br ? "\n" : "";
-    let message = br;
 
-    if (params.custom) message += params.custom(chalk);
-    else message += params.message;
-
-    console.log(message);
+    if (params.custom) console.log(params.custom(chalk) + "\n");
+    else console.log(chalk.white(params.message + "\n"));
   }
 
   @clr()
@@ -58,8 +54,7 @@ class LoggerBase {
       console.log(`chalk.bgGreen.black(params)`);
       return;
     }
-    let br = params.br ? "\n" : "";
-    const message = br + params.message;
+    const message = `${params.message}\n`;
 
     console.log(chalk.bgGreen.black(message));
   }
@@ -70,8 +65,7 @@ class LoggerBase {
       console.log(chalk.bgBlueBright.black(params));
       return;
     }
-    let br = params.br ? "\n" : "";
-    const message = br + params.message;
+    const message = `${params.message}\n`;
 
     console.log(chalk.bgBlueBright.black(message));
   }
@@ -82,8 +76,7 @@ class LoggerBase {
       console.log(chalk.bgRedBright.black(params));
       return;
     }
-    let br = params.br ? "\n" : "";
-    const message = br + params.message;
+    const message = `${params.message}\n`;
     console.log(chalk.bgRedBright.black(message));
   }
 
@@ -94,8 +87,7 @@ class LoggerBase {
       return;
     }
 
-    let br = params.br ? "\n" : "";
-    const message = br + params.message;
+    const message = `${params.message}\n`;
     console.log(chalk.yellowBright.black(message));
   }
 }

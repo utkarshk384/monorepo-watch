@@ -41,6 +41,7 @@ if (argv.config === "")
 
 const configPath = argv.config;
 
+//TODO: Issue loading this
 const { default: Config }: DynamicLoad = await import(
   path.join(process.cwd(), configPath)
 ); //Assuming that the cli is ran from a sub package
@@ -55,11 +56,11 @@ const defaultConfig: InternalConfig = {
     Dummy actions to avoid errors
   */
   actions: {
-    add: () => {},
-    addDir: () => {},
-    unlink: () => {},
-    unlinkDir: () => {},
-    change: () => {},
+    add: async () => {},
+    addDir: async () => {},
+    unlink: async () => {},
+    unlinkDir: async () => {},
+    change: async () => {},
   },
   include: argv.include,
 };
