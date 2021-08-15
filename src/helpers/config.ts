@@ -3,7 +3,12 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Package } from "@manypkg/get-packages";
 import mergeWith from "lodash.mergewith";
-import { Dict, IConfig, InternalConfig, ArgsOptions } from "../types";
+
+import type { Dict, IConfig, InternalConfig, ArgsOptions } from "../types";
+
+type DynamicLoad = {
+  default: InternalConfig;
+};
 
 /* Args options */
 
@@ -36,8 +41,11 @@ if (argv.config === "")
 
 const configPath = argv.config;
 
-const Config: InternalConfig = require(path.join(process.cwd(), configPath)); //Assuming that the cli is ran from a sub package
+const { default: Config }: DynamicLoad = await import(
+  path.join(process.cwd(), configPath)
+); //Assuming that the cli is ran from a sub package
 if (!Config) throw new Error("Couldn't find the config file");
+console.log(await (Config as any).default);
 
 const defaultConfig: InternalConfig = {
   packageRoot: process.cwd(),
