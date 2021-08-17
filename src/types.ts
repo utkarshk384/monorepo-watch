@@ -1,4 +1,5 @@
 import { Package } from "@manypkg/get-packages";
+import chalk from "chalk";
 import chokidar from "chokidar";
 import { Stats } from "fs";
 
@@ -45,6 +46,15 @@ export type EventAction = {
 export type LoggerActions = {
   message: string;
   clr?: boolean;
+  br?: boolean;
+};
+
+export type LoggerTheme = {
+  log: chalk.Chalk;
+  success: chalk.Chalk;
+  info: chalk.Chalk;
+  warning: chalk.Chalk;
+  error: chalk.Chalk;
 };
 
 /* Config Types */

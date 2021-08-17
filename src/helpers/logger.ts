@@ -1,94 +1,112 @@
 import chalk, { Chalk } from "chalk";
 
-import type { LoggerActions } from "../types";
+import type { LoggerActions, LoggerTheme } from "../types";
 
-type LoggerAction = Omit<LoggerActions, "message"> & {
-  message?: string;
-  custom?: (chalk: Chalk) => string;
-};
+abstract class Primitives {
+  public isActive: boolean;
+  public theme: LoggerTheme;
 
-const clr = () => {
-  return function (
-    target: LoggerBase,
-    _: string,
-    descriptor: PropertyDescriptor
-  ) {
-    const originalMethod = descriptor.value;
-
-    descriptor.value = function (params: LoggerActions | string) {
-      if (typeof params !== "string") {
-        /* For spacing */
-        params.message = `  ${params.message}  `;
-        if (params.clr) target.ClearScreen();
-        originalMethod(params);
-      } else {
-        /* For spacing */
-        params = `  ${params}  `;
-        originalMethod(params);
-      }
+  constructor() {
+    this.isActive = false;
+    this.theme = {
+      log: chalk.white,
+      success: chalk.bgGreen.black,
+      info: chalk.bgBlueBright.black,
+      warning: chalk.yellowBright.black,
+      error: chalk.bgRedBright.black,
     };
+  }
 
-    return descriptor;
-  };
-};
-
-class LoggerBase {
   public ClearScreen() {
     process.stdout.write("\x1Bc");
   }
 
-  @clr()
-  public Log(params: LoggerAction | string) {
-    if (typeof params === "string") {
-      console.log(chalk.white(params));
-      return;
-    }
-
-    if (params.custom) console.log(params.custom(chalk) + "\n");
-    else console.log(chalk.white(params.message + "\n"));
+  public LineBreak() {
+    console.log("\n");
   }
 
-  @clr()
+  protected format(params: LoggerActions | string) {
+    if (typeof params !== "string") {
+      if (params.br) params.message = params.message + "\n";
+
+      /* For spacing */
+      params.message = `  ${params.message}  `;
+
+      if (params.clr) this.ClearScreen();
+    } else {
+      /* For spacing */
+      params = `  ${params}  `;
+    }
+    return params;
+  }
+}
+
+class LoggerBase extends Primitives {
+  constructor() {
+    super();
+  }
+
+  public Log(params: LoggerActions | string) {
+    params = this.format(params);
+    if (!this.isActive) return;
+
+    if (typeof params === "string") {
+      console.log(this.theme.log(params));
+      return;
+    } else console.log(this.theme.log(params.message + "\n"));
+  }
+
   public Sucessful(params: LoggerActions | string) {
+    params = this.format(params);
+    if (!this.isActive) return;
+
     if (typeof params === "string") {
-      console.log(`chalk.bgGreen.black(params)`);
+      console.log(`${this.theme.success(params)}`);
       return;
     }
     const message = `${params.message}\n`;
 
-    console.log(chalk.bgGreen.black(message));
+    console.log(this.theme.success(message));
   }
 
-  @clr()
   public Info(params: LoggerActions | string) {
+    params = this.format(params);
+    if (!this.isActive) return;
+
     if (typeof params === "string") {
-      console.log(chalk.bgBlueBright.black(params));
+      console.log(this.theme.info(params));
       return;
     }
     const message = `${params.message}\n`;
 
-    console.log(chalk.bgBlueBright.black(message));
+    console.log(this.theme.info(message));
   }
 
-  @clr()
-  public Error(params: LoggerActions | string) {
-    if (typeof params === "string") {
-      console.log(chalk.bgRedBright.black(params));
-      return;
-    }
-    const message = `${params.message}\n`;
-    console.log(chalk.bgRedBright.black(message));
-  }
-
-  @clr()
   public Warn(params: LoggerActions | string) {
     if (typeof params === "string") {
-      console.log(chalk.yellowBright.black(params));
+      console.log(this.theme.warning(params));
       return;
     }
 
     const message = `${params.message}\n`;
-    console.log(chalk.yellowBright.black(message));
+    console.log(this.theme.warning(message));
+  }
+
+  public Error(params: LoggerActions | string) {
+    params = this.format(params);
+
+    if (typeof params === "string") {
+      console.log(this.theme.error(params));
+      return;
+    }
+    const message = `${params.message}\n`;
+    console.log(this.theme.error(message));
+  }
+
+  public Custom(cb: (chalk: Chalk) => void) {
+    if (!this.isActive) return;
+
+    console.log(cb(chalk));
   }
 }
 

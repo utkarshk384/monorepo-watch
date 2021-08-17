@@ -1,12 +1,13 @@
 import fs from "fs";
 import chokidar from "chokidar";
 import debounce from "lodash.debounce";
+import AsyncLock from "async-lock";
 
 import Logger, { LoggerType } from "../helpers/logger";
 import { FILENAME } from "../helpers/consts";
 import { InterpretFile, WriteFile } from "../helpers/file-writer";
 
-import type { EventAction, EventConfig } from "../types";
+import type { EventAction, EventConfig, LoggerTheme } from "../types";
 import { Package } from "@manypkg/get-packages";
 
 type Functions = (...args: any[]) => any | ((...args: any[]) => Promise<any>);
@@ -16,6 +17,9 @@ abstract class Events {
   protected actions: EventAction;
   protected logger: LoggerType;
   private packages: Package[];
+  private lock: AsyncLock;
+  private lockName: string;
+  private theme: LoggerTheme;
 
   constructor(config: EventConfig) {
     this.instance = chokidar.watch(config.include, config.options);
@@ -23,14 +27,30 @@ abstract class Events {
     this.actions = config.actions;
     this.logger = Logger();
     this.packages = config.packages;
+    this.lock = new AsyncLock();
+    this.lockName = "locked";
+    this.theme = this.logger.theme;
   }
 
   protected setup(): void {
+    this.onError();
     this.onAdd();
     this.onAddDir();
     this.onChange();
     this.onUnlink();
     this.onUnlinkDir();
+  }
+
+  protected onError() {
+    this.instance.on("error", (error) => {
+      this.logger.LineBreak();
+      this.logger.Custom(
+        (c) =>
+          c`${this.logger.Error("Error")} - ${error.message}.\n Stack - ${
+            error.stack
+          }`
+      );
+    });
   }
 
   protected onAdd(): void {
@@ -42,16 +62,14 @@ abstract class Events {
       this.instance.add(path);
 
       /* Run user function */
-      if (add) {
-        if (this.isAsync(add) === false) {
-          add?.(path, currentPkg, stats);
-          this.finalLogger("Add", path);
-          return;
-        }
+      if (add && this.isAsync(add) === true) {
         add?.(path, currentPkg, stats).then(() => {
           this.finalLogger("Add", path);
         });
-      }
+      } else
+        throw new Error(
+          "Add function is either not defined or is not an async function"
+        );
     });
   }
 
@@ -64,16 +82,14 @@ abstract class Events {
       this.instance.add(path);
 
       /* Run user function */
-      if (addDir) {
-        if (this.isAsync(addDir) === false) {
-          addDir?.(path, currentPkg, stats);
-          this.finalLogger("Add Dir", path);
-          return;
-        }
+      if (addDir && this.isAsync(addDir) === true) {
         addDir?.(path, currentPkg, stats).then(() => {
           this.finalLogger("Add Dir", path);
         });
-      }
+      } else
+        throw new Error(
+          "Add Dir function is either not defined or is not an async function"
+        );
     });
   }
 
@@ -86,16 +102,14 @@ abstract class Events {
       this.instance.unwatch(path);
 
       /* Run user function */
-      if (unlink) {
-        if (this.isAsync(unlink) === false) {
-          unlink?.(path, currentPkg);
-          this.finalLogger("Remove", path);
-          return;
-        }
+      if (unlink && this.isAsync(unlink) === true) {
         unlink?.(path, currentPkg).then(() => {
           this.finalLogger("Remove", path);
         });
-      }
+      } else
+        throw new Error(
+          "Unlink function is either not defined or is not an async function"
+        );
     });
   }
 
@@ -108,17 +122,14 @@ abstract class Events {
       this.instance.unwatch(path);
 
       /* Run user function */
-      if (unlinkDir) {
-        if (this.isAsync(unlinkDir) === false) {
-          unlinkDir?.(path, currentPkg);
-          this.finalLogger("Remove Dir", path);
-          return;
-        }
+      if (unlinkDir && this.isAsync(unlinkDir) === true) {
         unlinkDir?.(path, currentPkg).then(() => {
           this.finalLogger("Remove Dir", path);
         });
-      }
-      this.finalLogger("Remove Dir", path);
+      } else
+        throw new Error(
+          "UnlinkDir function is either not defined or is not an async function"
+        );
     });
   }
 
@@ -131,29 +142,27 @@ abstract class Events {
 
       /* Read and save `fileSize` to temp disk file */
       if (stats.size === InterpretFile(FILENAME, path)) {
+        this.logger.ClearScreen()
+        this.logger.Custom(c => c`${this.theme.success("  Change  ")} - ${this.theme.log("No file recorded on current save")}`)
         this.logger.Sucessful({
           message: "No changes in file recorded",
-          clr: false,
+          clr: true,
         });
         return;
       }
       WriteFile(FILENAME, stats.size, path);
 
-      this.logger.Log({ message: "Performing Action", clr: false });
-      this.logger.Info(`File changed ${this.convertPath(path)}`);
+      this.logger.Log({ message: "Performing Action", clr: true });
+      this.logger.Custom(c => c`${this.theme.info("  File Changed  ")} - ${this.theme.log(this.convertPath(path))}`)
 
       /* Run user function */
-      if (change) {
-        console.log(this.isAsync(change))
-        if (this.isAsync(change) === false) {
-          change?.(path, currentPkg, stats);
-          this.finalLogger("Change", path);
-          return;
-        }
-        change?.(path, currentPkg, stats).then(() => {
-          this.finalLogger("Change", path);
-        });
-      }
+      if (change && this.isAsync(change) === true) {
+        this.lock.acquire(this.lockName, () => {
+            change?.(path, currentPkg, stats)
+        }).then(() => {
+            this.finalLogger("Change", path);
+        })
+      } else throw new Error(`Change function is either not defined or is not an async function`);
     }, 500, { maxWait: 750 }));
   }
 
@@ -181,12 +190,12 @@ abstract class Events {
 
   private finalLogger(event: string, path: string): void {
     this.logger.Log({ message: "Action Completed", clr: false });
-    this.logger.Log({
-      custom: (chalk) =>
-        `${chalk.bgGreen.black(`  ${event}  `)} - ${chalk.white(
+    this.logger.Custom(
+      (c) =>
+        `${c.bgGreen.black(`  ${event}  `)} - ${c.white(
           this.convertPath(path)
-        )}`,
-    });
+        )}\n`
+    );
   }
 }
 

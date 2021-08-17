@@ -43,6 +43,7 @@ const external = [
   "@manypkg/get-packages",
   "os",
   "chalk",
+  "async-lock",
 ];
 
 const config = {

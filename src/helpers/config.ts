@@ -41,12 +41,10 @@ if (argv.config === "")
 
 const configPath = argv.config;
 
-//TODO: Issue loading this
 const { default: Config }: DynamicLoad = await import(
   path.join(process.cwd(), configPath)
 ); //Assuming that the cli is ran from a sub package
 if (!Config) throw new Error("Couldn't find the config file");
-console.log(await (Config as any).default);
 
 const defaultConfig: InternalConfig = {
   packageRoot: process.cwd(),
