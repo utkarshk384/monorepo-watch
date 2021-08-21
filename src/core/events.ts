@@ -134,7 +134,7 @@ abstract class Events {
   }
 
   protected onChange(): void {
-    //prettier-ignore
+    //prettier-ignored
     this.instance.on("change", debounce((path, stats) => {
       const {change} = this.actions;
       const currentPkg = this.getPackage(path);

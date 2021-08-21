@@ -43,10 +43,7 @@ class BaseResolvers {
       const match = key.match(this.regex);
       let name = "";
 
-      if (!match || match.length === 0)
-        throw new Error(
-          "There was no match between package name and the regex to resolve it"
-        );
+      if (!match || match.length === 0) continue;
 
       name = match[0].split("/")[1];
 
