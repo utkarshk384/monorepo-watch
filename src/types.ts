@@ -59,12 +59,15 @@ export type LoggerActions = {
 	br?: boolean
 }
 
+export type LoggerLevel = "log" | "info" | "warn" | "success" | "error" | "debug"
+
 export type LoggerTheme = {
 	log: chalk.Chalk
 	success: chalk.Chalk
 	info: chalk.Chalk
 	warning: chalk.Chalk
 	error: chalk.Chalk
+	debug: chalk.Chalk
 }
 
 /* Config Types */

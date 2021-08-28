@@ -5,13 +5,11 @@ import debounce from "lodash.debounce"
 import spawn from "cross-spawn"
 import { Package } from "@manypkg/get-packages"
 
-// import { FILENAME } from "../helpers/consts";
 import { LOCK_NAME } from "../helpers/consts"
 import Logger, { LoggerType } from "../helpers/logger"
 import { convertPath, isAsync } from "src/helpers/utils"
-// import { InterpretFile, WriteFile } from "../helpers/file-writer";
 
-import type { WatcherConfig, LoggerTheme, ActionOpts, InternalConfig } from "../types"
+import type { WatcherConfig, ActionOpts, InternalConfig } from "../types"
 import { StdioOptions } from "child_process"
 
 abstract class Events {
@@ -21,7 +19,6 @@ abstract class Events {
 	protected logger: LoggerType
 	private packages: Package[]
 	private lock: AsyncLock
-	private theme: LoggerTheme
 
 	constructor(opts: WatcherConfig) {
 		this.instance = chokidar.watch(opts.include, {
@@ -33,7 +30,6 @@ abstract class Events {
 		this.logger = Logger()
 		this.packages = opts.packages
 		this.lock = new AsyncLock()
-		this.theme = this.logger.theme
 	}
 
 	protected setup(): void {
@@ -49,7 +45,10 @@ abstract class Events {
 		this.instance.on("error", (error) => {
 			this.logger.LineBreak()
 			this.logger.Custom(
-				(c) => c`${this.logger.Error("Error")} - ${error.message}.\n Stack - ${error.stack}`
+				(c) =>
+					c`${this.logger.raw({ message: "Error", spaceContent: true }, "error")} - ${
+						error.message
+					}.\n Stack - ${error.stack}`
 			)
 		})
 	}
@@ -117,25 +116,13 @@ abstract class Events {
 
 					stats = stats ?? fs.statSync(filePath)
 
-					/* Read and save `fileSize` to temp disk file */
-					// if (stats.size === InterpretFile(FILENAME, filePath)) {
-					//     this.logger.ClearScreen();
-					//     this.logger.Custom(
-					//         (c) =>
-					//           c`${this.theme.success("  Change  ")} - ${this.theme.log(
-					//               "No file recorded on current save"
-					//             )}`
-					//         );
-					//         return;
-					//       }
-					//       WriteFile(FILENAME, stats.size, filePath);
-
-					this.logger.Log({ message: "Performing Action", clr: true, spaceContent: false })
+					this.logger.log({ message: "Performing Action\n", clr: true, spaceContent: false }, "log")
 					this.logger.Custom(
 						(c) =>
-							c`${this.theme.info("  File Changed  ")} - ${this.theme.log(
-								convertPath(this.root, filePath)
-							)}\n`
+							c`${this.logger.raw(
+								{ message: "File Changed", spaceContent: true },
+								"info"
+							)} - ${this.logger.raw(convertPath(this.root, filePath), "log")}\n`
 					)
 
 					/* Run user function */
@@ -199,8 +186,14 @@ abstract class Events {
 	}
 
 	private EndLogger(eventName: string, path: string): void {
-		this.logger.Log({ message: "\nAction Completed", clr: false })
-		this.logger.Custom((c) => `${c.bgGreen.black(`  ${eventName}  `)} - ${c.white(path)}\n`)
+		this.logger.log("Action Completed\n", "log")
+		this.logger.Custom(
+			(c) =>
+				c`${this.logger.raw(
+					{ message: eventName, spaceContent: true },
+					"success"
+				)} - ${this.logger.raw(path, "log")}\n`
+		)
 	}
 }
 

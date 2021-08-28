@@ -1,6 +1,4 @@
 import Events from "./events"
-// import { RemoveFile, CreateFile } from "../helpers/file-writer";
-// import { FILENAME } from "../helpers/consts";
 
 import type { WatcherConfig } from "../types"
 
@@ -11,11 +9,10 @@ export class WatcherBase extends Events {
 	}
 
 	private setupExtend(): void {
-		super.setup()
-		// CreateFile(FILENAME);
 		this.handleSigint()
 		this.handleError()
 		this.onReady()
+		super.setup()
 	}
 
 	private close(): void {
@@ -23,11 +20,11 @@ export class WatcherBase extends Events {
 			this.logger.LineBreak()
 			this.logger.Custom(
 				(chalk) =>
-					chalk`${this.logger.theme.error("  Closed  ")} - ${this.logger.theme.log(
-						"Sucessfully stopped watching files"
-					)}`
+					chalk`${this.logger.raw(
+						{ message: "Closed", spaceContent: true },
+						"error"
+					)} - ${this.logger.raw("Sucessfully stopped watching files", "log")}`
 			)
-			// RemoveFile(FILENAME);
 		})
 	}
 
@@ -41,7 +38,7 @@ export class WatcherBase extends Events {
 		process.on("uncaughtException", (err: Error, origin: string) => {
 			this.logger.LineBreak()
 			//prettier-ignore
-			this.logger.Custom(chalk => chalk`${this.logger.theme.error("  Error  ")} - ${this.logger.theme.log(`${err.message}. ${origin}`)}`);
+			this.logger.Custom(chalk => chalk`${this.logger.raw({message: "Error", spaceContent: true}, "error")} - ${this.logger.raw(`${err.message}. ${origin}`, "log")}`);
 
 			this.close()
 			process.exit(0)
@@ -56,7 +53,7 @@ export class WatcherBase extends Events {
 			this.logger.Custom(
 				(chalk) =>
 					//prettier-ignore
-					chalk`${this.logger.theme.success("  Ready  ")} - ${this.logger.theme.log("Now watching for changes\n")}`
+					chalk`${this.logger.raw({message: "Ready", spaceContent: true}, "success")} - ${this.logger.raw("Now watching for changes\n", "log")}`
 			)
 		}, 1000)
 	}
