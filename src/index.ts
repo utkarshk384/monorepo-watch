@@ -10,7 +10,7 @@ const { root, packages } = getPackagesSync(Config.packageRoot || process.cwd());
 const config = MergeNormalizeConfig(Config, packages, argv);
 
 /* Regex to match package names inside package.json */
-const regex = new RegExp(`${Config.prefix}\/[\\w]+$`, "i");
+const regex = new RegExp(`${Config.prefix}\/[\\w-]+$`, "i");
 
 /* 
   Resolve caller package's package.json
