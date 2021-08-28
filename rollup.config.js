@@ -43,6 +43,7 @@ const external = [
   "@manypkg/get-packages",
   "os",
   "chalk",
+  "cross-spawn",
   "async-lock",
 ];
 

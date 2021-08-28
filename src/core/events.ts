@@ -1,34 +1,42 @@
 import fs from "fs";
 import chokidar from "chokidar";
-import debounce from "lodash.debounce";
 import AsyncLock from "async-lock";
-
-import Logger, { LoggerType } from "../helpers/logger";
-import { FILENAME } from "../helpers/consts";
-import { InterpretFile, WriteFile } from "../helpers/file-writer";
-
-import type { EventAction, EventConfig, LoggerTheme } from "../types";
+import debounce from "lodash.debounce";
+import spawn from "cross-spawn";
 import { Package } from "@manypkg/get-packages";
 
-type Functions = (...args: any[]) => any | ((...args: any[]) => Promise<any>);
+// import { FILENAME } from "../helpers/consts";
+import { LOCK_NAME } from "../helpers/consts";
+import Logger, { LoggerType } from "../helpers/logger";
+import { convertPath, isAsync } from "src/helpers/utils";
+// import { InterpretFile, WriteFile } from "../helpers/file-writer";
+
+import type {
+  WatcherConfig,
+  LoggerTheme,
+  ActionOpts,
+  InternalConfig,
+} from "../types";
+
 abstract class Events {
   public instance: chokidar.FSWatcher;
   protected root: string;
-  protected actions: EventAction;
+  protected config: InternalConfig;
   protected logger: LoggerType;
   private packages: Package[];
   private lock: AsyncLock;
-  private lockName: string;
   private theme: LoggerTheme;
 
-  constructor(config: EventConfig) {
-    this.instance = chokidar.watch(config.include, config.options);
-    this.root = config.root;
-    this.actions = config.actions;
+  constructor(opts: WatcherConfig) {
+    this.instance = chokidar.watch(opts.include, {
+      ...opts.config.options,
+      ignoreInitial: true,
+    });
+    this.root = opts.root;
+    this.config = opts.config;
     this.logger = Logger();
-    this.packages = config.packages;
+    this.packages = opts.packages;
     this.lock = new AsyncLock();
-    this.lockName = "locked";
     this.theme = this.logger.theme;
   }
 
@@ -55,126 +63,96 @@ abstract class Events {
 
   protected onAdd(): void {
     this.instance.on("add", (path, stats) => {
-      const { add } = this.actions;
+      const add = this.config?.actions?.add;
       const currentPkg = this.getPackage(path);
 
       /* Add file to watch list */
       this.instance.add(path);
 
       /* Run user function */
-      if (add && this.isAsync(add) === true) {
-        add?.(path, currentPkg, stats).then(() => {
-          this.finalLogger("Add", path);
-        });
-      } else
-        throw new Error(
-          "Add function is either not defined or is not an async function"
-        );
+      this.runUserFn("Add", { currentPkg, path, stats }, add);
     });
   }
 
   protected onAddDir(): void {
     this.instance.on("addDir", (path, stats) => {
-      const { addDir } = this.actions;
+      const addDir = this.config?.actions?.addDir;
       const currentPkg = this.getPackage(path);
 
       /* Add dir to watch list */
       this.instance.add(path);
 
       /* Run user function */
-      if (addDir && this.isAsync(addDir) === true) {
-        addDir?.(path, currentPkg, stats).then(() => {
-          this.finalLogger("Add Dir", path);
-        });
-      } else
-        throw new Error(
-          "Add Dir function is either not defined or is not an async function"
-        );
+      this.runUserFn("Add Dir", { currentPkg, path, stats }, addDir);
     });
   }
 
   protected onUnlink(): void {
     this.instance.on("unlink", (path) => {
-      const { unlink } = this.actions;
+      const unlink = this.config?.actions?.unlink;
       const currentPkg = this.getPackage(path);
 
       /* Remove File from watch list */
       this.instance.unwatch(path);
 
       /* Run user function */
-      if (unlink && this.isAsync(unlink) === true) {
-        unlink?.(path, currentPkg).then(() => {
-          this.finalLogger("Remove", path);
-        });
-      } else
-        throw new Error(
-          "Unlink function is either not defined or is not an async function"
-        );
+      this.runUserFn("Remove", { currentPkg, path }, unlink);
     });
   }
 
   protected onUnlinkDir(): void {
     this.instance.on("unlinkDir", (path) => {
-      const { unlinkDir } = this.actions;
+      const unlinkDir = this.config?.actions?.unlinkDir;
       const currentPkg = this.getPackage(path);
 
       /* Remove Dir from watch list */
       this.instance.unwatch(path);
 
       /* Run user function */
-      if (unlinkDir && this.isAsync(unlinkDir) === true) {
-        unlinkDir?.(path, currentPkg).then(() => {
-          this.finalLogger("Remove Dir", path);
-        });
-      } else
-        throw new Error(
-          "UnlinkDir function is either not defined or is not an async function"
-        );
+      this.runUserFn("Remove Dir", { currentPkg, path }, unlinkDir);
     });
   }
 
   protected onChange(): void {
     //prettier-ignored
-    this.instance.on("change", debounce((path, stats) => {
-      const {change} = this.actions;
-      const currentPkg = this.getPackage(path);
-      stats = stats ?? fs.statSync(path);
+    this.instance.on(
+      "change",
+      debounce(
+        (path, stats) => {
+          const change = this.config?.actions?.change;
+          const currentPkg = this.getPackage(path);
+          stats = stats ?? fs.statSync(path);
 
-      /* Read and save `fileSize` to temp disk file */
-      if (stats.size === InterpretFile(FILENAME, path)) {
-        this.logger.ClearScreen()
-        this.logger.Custom(c => c`${this.theme.success("  Change  ")} - ${this.theme.log("No file recorded on current save")}`)
-        this.logger.Sucessful({
-          message: "No changes in file recorded",
-          clr: true,
-        });
-        return;
-      }
-      WriteFile(FILENAME, stats.size, path);
+          /* Read and save `fileSize` to temp disk file */
+          // if (stats.size === InterpretFile(FILENAME, path)) {
+          //     this.logger.ClearScreen();
+          //     this.logger.Custom(
+          //         (c) =>
+          //           c`${this.theme.success("  Change  ")} - ${this.theme.log(
+          //               "No file recorded on current save"
+          //             )}`
+          //         );
+          //         return;
+          //       }
+          //       WriteFile(FILENAME, stats.size, path);
 
-      this.logger.Log({ message: "Performing Action", clr: true });
-      this.logger.Custom(c => c`${this.theme.info("  File Changed  ")} - ${this.theme.log(this.convertPath(path))}`)
+          this.logger.Log({ message: "Performing Action", clr: true });
+          this.logger.Custom(
+            (c) =>
+              c`${this.theme.info("  File Changed  ")} - ${this.theme.log(
+                convertPath(this.root, path)
+              )}`
+          );
 
-      /* Run user function */
-      if (change && this.isAsync(change) === true) {
-        this.lock.acquire(this.lockName, () => {
-            change?.(path, currentPkg, stats)
-        }).then(() => {
-            this.finalLogger("Change", path);
-        })
-      } else throw new Error(`Change function is either not defined or is not an async function`);
-    }, 500, { maxWait: 750 }));
-  }
-
-  protected convertPath(absPath: string): string {
-    const fullPath = absPath.replace(this.root, "");
-    return fullPath;
-  }
-
-  private isAsync(fn?: Functions): boolean {
-    const AsyncFunction = (async () => {}).constructor;
-
-    return fn instanceof AsyncFunction;
+          /* Run user function */
+          this.lock.acquire(LOCK_NAME, () => {
+            this.runUserFn("Change", { currentPkg, path, stats }, change);
+          });
+        },
+        100,
+        { maxWait: 100, trailing: true }
+      )
+    );
   }
 
   private getPackage(path: string): string {
@@ -188,13 +166,41 @@ abstract class Events {
     return matchedPkg;
   }
 
-  private finalLogger(event: string, path: string): void {
-    this.logger.Log({ message: "Action Completed", clr: false });
+  private runUserFn(
+    eventName: string,
+    options: ActionOpts,
+    fn?: (opts: ActionOpts) => Promise<void>
+  ): void {
+    const relativePath = convertPath(this.root, options.path);
+    if (fn && isAsync(fn) === true) {
+      fn({ ...options }).then(() => {
+        this.EndLogger(eventName, relativePath);
+      });
+    } else {
+      //INFO: Experimental
+      process.env.FORCE_COLOR = "true";
+      const cp = spawn.sync(
+        this.config.runScripts[0],
+        this.config.runScripts.slice(1),
+        {
+          env: process.env,
+          cwd: options.path.split("/").slice(0, -1).join("/"), //Hacky way to get it working
+          stdio: ["inherit", "pipe", "inherit"],
+        }
+      );
+
+      if (cp.error) throw cp.error;
+      if (cp.stderr) throw new Error(String(cp.stderr));
+      else if (cp.stdout) {
+        this.EndLogger(eventName, relativePath);
+      }
+    }
+  }
+
+  private EndLogger(eventName: string, path: string) {
+    this.logger.Log({ message: "\nAction Completed", clr: false });
     this.logger.Custom(
-      (c) =>
-        `${c.bgGreen.black(`  ${event}  `)} - ${c.white(
-          this.convertPath(path)
-        )}\n`
+      (c) => `${c.bgGreen.black(`  ${eventName}  `)} - ${c.white(path)}\n`
     );
   }
 }

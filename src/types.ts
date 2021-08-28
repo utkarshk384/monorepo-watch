@@ -6,6 +6,13 @@ import { Stats } from "fs";
 /* General Types */
 export type Dict<T = string, K extends string | number = string> = Record<K, T>;
 export type EventType = "add" | "addDir" | "change" | "unlink" | "unlinkDir";
+export type Functions = (
+  ...args: any[]
+) => any | ((...args: any[]) => Promise<any>);
+
+export type DynamicLoad = {
+  default: InternalConfig;
+};
 
 /* Resolver Types */
 interface IBaseResolver {
@@ -25,21 +32,24 @@ export type ResolverType = (config: ResolverConfig) => IBaseResolver;
 export type WatcherConfig = {
   root: string;
   include: string[];
-  options: chokidar.WatchOptions;
-  actions: EventAction;
-};
-
-/* Event Types */
-export type EventConfig = WatcherConfig & {
+  config: InternalConfig;
   packages: Package[];
 };
 
+/* Event Types */
+
+export type ActionOpts = {
+  path: string;
+  currentPkg: string;
+  stats?: Stats;
+};
+
 export type EventAction = {
-  add?: (path: string, currentPkg: string, stats?: Stats) => Promise<any>;
-  addDir?: (path: string, currentPkg: string, stats?: Stats) => Promise<any>;
-  unlink?: (path: string, currentPkg: string) => Promise<any>;
-  unlinkDir?: (path: string, currentPkg: string) => Promise<any>;
-  change: (path: string, currentPkg: string, stats?: Stats) => Promise<any>;
+  add?: (opts: ActionOpts) => Promise<any>;
+  addDir?: (opts: ActionOpts) => Promise<any>;
+  unlink?: (opts: ActionOpts) => Promise<any>;
+  unlinkDir?: (opts: ActionOpts) => Promise<any>;
+  change: (opts: ActionOpts) => Promise<any>;
 };
 
 /* Logger Types */
@@ -58,19 +68,23 @@ export type LoggerTheme = {
 };
 
 /* Config Types */
-type Config = Omit<Partial<WatcherConfig>, "include" | "root">;
 
 export type ArgsOptions = {
   config: string;
   c: string;
   include: string[];
   i: string;
+  run: string[];
+  r: string[];
 };
 
-export interface IConfig extends Config {
+export interface IConfig {
+  options?: chokidar.WatchOptions;
   packageRoot: string;
   prefix?: string;
   include?: string[];
+  actions?: EventAction;
+  runScripts?: string[];
 }
 
 export type InternalConfig = Required<IConfig>;

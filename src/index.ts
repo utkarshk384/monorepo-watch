@@ -1,12 +1,13 @@
 #! /usr/bin/env node
 import { getPackagesSync } from "@manypkg/get-packages";
 
-import Watcher, { WatcherBase } from "./core/watcher";
 import Resolver from "./core/resolver";
-import { Config, MergeConfig } from "./helpers/config";
+import { Config, argv } from "./helpers/parse";
+import Watcher, { WatcherBase } from "./core/watcher";
+import { MergeNormalizeConfig } from "./helpers/utils";
 
 const { root, packages } = getPackagesSync(Config.packageRoot || process.cwd());
-const config = MergeConfig(Config, packages);
+const config = MergeNormalizeConfig(Config, packages, argv);
 
 /* Regex to match package names inside package.json */
 const regex = new RegExp(`${Config.prefix}\/[\\w]+$`, "i");
@@ -39,8 +40,7 @@ const watcher: WatcherBase = Watcher({
   root: root.dir,
   include,
   packages,
-  options: config.options,
-  actions: config.actions,
+  config,
 });
 
 export default watcher;

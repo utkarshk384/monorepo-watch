@@ -2,6 +2,7 @@ import chalk, { Chalk } from "chalk";
 
 import type { LoggerActions, LoggerTheme } from "../types";
 
+const ENV = "development";
 abstract class Primitives {
   public isActive: boolean;
   public theme: LoggerTheme;
@@ -18,7 +19,7 @@ abstract class Primitives {
   }
 
   public ClearScreen() {
-    process.stdout.write("\x1Bc");
+    if (ENV !== "development") process.stdout.write("\x1Bc");
   }
 
   public LineBreak() {
