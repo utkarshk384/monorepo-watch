@@ -1,59 +1,53 @@
-import fs from "fs";
-import path from "path";
+import fs from "fs"
+import path from "path"
+import { Dict } from "src/types"
 
-import { ROOT } from "./consts";
+import { ROOT } from "./consts"
 
 /* 
   Exports
 */
-export const WriteFile = (
-  fileName: string,
-  fileSize: number,
-  filePath: string
-): void => {
-  CreateFile(fileName);
-  const parsedData = readFile(fileName);
-  parsedData[filePath] = fileSize;
+export const WriteFile = (fileName: string, fileSize: number, filePath: string): void => {
+	CreateFile(fileName)
+	const parsedData = readFile(fileName)
+	parsedData[filePath] = fileSize
 
-  const data = JSON.stringify(parsedData);
+	const data = JSON.stringify(parsedData)
 
-  fs.writeFileSync(path.join(ROOT, fileName), data, "utf-8");
-};
+	fs.writeFileSync(path.join(ROOT, fileName), data, "utf-8")
+}
 
-export const InterpretFile = (
-  fileName: string,
-  filePath: string
-): number | null => {
-  const parsedData = readFile(fileName);
-  const entry = parsedData[filePath] || null;
+export const InterpretFile = (fileName: string, filePath: string): number | null => {
+	const parsedData = readFile(fileName)
+	const entry = parsedData[filePath] || null
 
-  return entry;
-};
+	return entry
+}
 
-export const RemoveFile = (fileName: string) => {
-  try {
-    fs.rmSync(path.join(ROOT, fileName));
-  } catch (err) {
-    // Ignore
-  }
-};
+export const RemoveFile = (fileName: string): void => {
+	try {
+		fs.rmSync(path.join(ROOT, fileName))
+	} catch (err) {
+		// Ignore
+	}
+}
 
-export const CreateFile = (fileName: string) => {
-  const exists = fs.existsSync(path.join(ROOT, fileName));
+export const CreateFile = (fileName: string): boolean => {
+	const exists = fs.existsSync(path.join(ROOT, fileName))
 
-  if (!exists) {
-    const data = JSON.stringify({});
-    fs.writeFileSync(path.join(ROOT, fileName), data, "utf-8");
-  }
-  return exists;
-};
+	if (!exists) {
+		const data = JSON.stringify({})
+		fs.writeFileSync(path.join(ROOT, fileName), data, "utf-8")
+	}
+	return exists
+}
 
 /* 
   Helpers
 */
-const readFile = (fileName: string) => {
-  CreateFile(fileName);
-  const payload = fs.readFileSync(path.join(ROOT, fileName), "utf8");
+const readFile = (fileName: string): Dict<number> => {
+	CreateFile(fileName)
+	const payload = fs.readFileSync(path.join(ROOT, fileName), "utf8")
 
-  return JSON.parse(payload);
-};
+	return JSON.parse(payload)
+}

@@ -27,6 +27,7 @@
   },
   "type": "module",
   "scripts": {
+    "lint": "tsc --noEmit && eslint --ext .js,.jsx,.ts,.tsx src --fix",
     "build": "rm -rf dist && yarn build:package && yarn build:types",
     "build:package": "yarn rollup -c ./rollup.config.js",
     "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir dist/types",
