@@ -2,7 +2,7 @@ import yargs from "yargs"
 import { hideBin } from "yargs/helpers"
 
 import type { Dict, ArgsOptions, InternalConfig } from "../types"
-import { getConfigFile } from "./utils"
+import { getConfigFile } from "./config-utils"
 
 /* Args options */
 

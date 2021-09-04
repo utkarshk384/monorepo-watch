@@ -2,9 +2,8 @@
 import { getPackagesSync } from "@manypkg/get-packages"
 
 import Resolver from "./core/resolver"
-import { Config, argv } from "./helpers/parse"
 import Watcher, { WatcherBase } from "./core/watcher"
-import { MergeNormalizeConfig } from "./helpers/utils"
+import { Config, argv, MergeNormalizeConfig } from "./helpers"
 
 const { root, packages } = getPackagesSync(Config.packageRoot || process.cwd())
 const config = MergeNormalizeConfig(Config, packages, argv)

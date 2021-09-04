@@ -1,22 +1,21 @@
-import fs from "fs"
 import chokidar from "chokidar"
 import AsyncLock from "async-lock"
 import debounce from "lodash.debounce"
-import spawn from "cross-spawn"
+import { performance } from "perf_hooks"
 import { Package } from "@manypkg/get-packages"
 
-import { LOCK_NAME } from "../helpers/consts"
-import Logger, { LoggerType } from "../helpers/logger"
-import { convertPath, isAsync } from "src/helpers/utils"
+import { Spawner } from "./spawn"
+import { LoggerType, Logger, convertPath, LOCK_NAME, Observable } from "../helpers"
 
 import type { WatcherConfig, ActionOpts, InternalConfig } from "../types"
-import { StdioOptions } from "child_process"
 
 abstract class Events {
 	public instance: chokidar.FSWatcher
 	protected root: string
 	protected config: InternalConfig
 	protected logger: LoggerType
+	protected optionToggle: Observable<boolean>
+	private spawner: Spawner
 	private packages: Package[]
 	private lock: AsyncLock
 
@@ -27,111 +26,105 @@ abstract class Events {
 		})
 		this.root = opts.root
 		this.config = opts.config
-		this.logger = Logger()
+		this.logger = Logger.getInstance()
 		this.packages = opts.packages
+		this.spawner = new Spawner(this.root, this.config)
 		this.lock = new AsyncLock()
+		this.optionToggle = new Observable<boolean>(false)
 	}
 
-	protected setup(): void {
-		this.onError()
-		this.onAdd()
-		this.onAddDir()
+	protected async setup(): Promise<void> {
+		this.onAddEvents()
 		this.onChange()
-		this.onUnlink()
-		this.onUnlinkDir()
+		this.onUnlinkEvents()
 	}
 
-	protected onError(): void {
-		this.instance.on("error", (error) => {
-			this.logger.LineBreak()
-			this.logger.Custom(
-				(c) =>
-					c`${this.logger.raw({ message: "Error", spaceContent: true }, "error")} - ${
-						error.message
-					}.\n Stack - ${error.stack}`
-			)
+	protected onAddEvents(): void {
+		const events = ["addDir", "add"]
+
+		events.forEach((event) => {
+			this.instance.on(event, (filePath) => {
+				this.optionToggle.setValue(false)
+				let action, name
+
+				if (event === "add") {
+					action = this.config?.actions?.add
+					name = "Add"
+				} else {
+					action = this.config?.actions?.addDir
+					name = "Add Dir"
+				}
+
+				const { currentPkg, packagePath } = this.getPackage(filePath)
+
+				/* Remove path from watch list */
+				this.instance.unwatch(filePath)
+
+				this.logger.PerformAction(convertPath(this.root, filePath))
+
+				/* Run user function */
+				this.runUserFn(name, { currentPkg, filePath, packagePath }, action)
+			})
 		})
 	}
 
-	protected onAdd(): void {
-		this.instance.on("add", (filePath, stats) => {
-			const add = this.config?.actions?.add
-			const { currentPkg, packagePath } = this.getPackage(filePath)
+	protected onUnlinkEvents(): void {
+		const events = ["unlinkDir", "unlink"]
 
-			/* Add file to watch list */
-			this.instance.add(filePath)
+		events.forEach((event) => {
+			this.instance.on(event, (filePath) => {
+				this.optionToggle.setValue(false)
 
-			/* Run user function */
-			this.runUserFn("Add", { currentPkg, filePath, packagePath, stats }, add)
-		})
-	}
+				let action, name
 
-	protected onAddDir(): void {
-		this.instance.on("addDir", (filePath, stats) => {
-			const addDir = this.config?.actions?.addDir
-			const { currentPkg, packagePath } = this.getPackage(filePath)
+				if (event === "unlink") {
+					action = this.config?.actions?.unlink
+					name = "Remove"
+				} else {
+					action = this.config?.actions?.unlinkDir
+					name = "Remove Dir"
+				}
 
-			/* Add dir to watch list */
-			this.instance.add(filePath)
+				const { currentPkg, packagePath } = this.getPackage(filePath)
 
-			/* Run user function */
-			this.runUserFn("Add Dir", { currentPkg, filePath, packagePath, stats }, addDir)
-		})
-	}
+				/* Remove path from watch list */
+				this.instance.unwatch(filePath)
 
-	protected onUnlink(): void {
-		this.instance.on("unlink", (filePath) => {
-			const unlink = this.config?.actions?.unlink
-			const { currentPkg, packagePath } = this.getPackage(filePath)
+				this.logger.PerformAction(convertPath(this.root, filePath))
 
-			/* Remove File from watch list */
-			this.instance.unwatch(filePath)
-
-			/* Run user function */
-			this.runUserFn("Remove", { currentPkg, filePath, packagePath }, unlink)
-		})
-	}
-
-	protected onUnlinkDir(): void {
-		this.instance.on("unlinkDir", (filePath) => {
-			const unlinkDir = this.config?.actions?.unlinkDir
-			const { currentPkg, packagePath } = this.getPackage(filePath)
-
-			/* Remove Dir from watch list */
-			this.instance.unwatch(filePath)
-
-			/* Run user function */
-			this.runUserFn("Remove Dir", { currentPkg, filePath, packagePath }, unlinkDir)
+				/* Run user function */
+				this.runUserFn(name, { currentPkg, filePath, packagePath }, action)
+			})
 		})
 	}
 
 	protected onChange(): void {
-		//prettier-ignored
+		const timeout = { min: 2000, max: 3000 }
+
+		/* Debouce to prevent multiple throttle the amount of time the function is ran */
 		this.instance.on(
 			"change",
 			debounce(
 				(filePath, stats) => {
+					this.optionToggle.setValue(false)
+
 					const change = this.config?.actions?.change
 					const { currentPkg, packagePath } = this.getPackage(filePath)
 
-					stats = stats ?? fs.statSync(filePath)
+					this.logger.PerformAction(convertPath(this.root, filePath))
 
-					this.logger.log({ message: "Performing Action\n", clr: true, spaceContent: false }, "log")
-					this.logger.Custom(
-						(c) =>
-							c`${this.logger.raw(
-								{ message: "File Changed", spaceContent: true },
-								"info"
-							)} - ${this.logger.raw(convertPath(this.root, filePath), "log")}\n`
-					)
-
-					/* Run user function */
+					/* Run user function. Using async lock to prevent running the action multiple times for a single file.*/
 					this.lock.acquire(LOCK_NAME, () => {
+						const timerStart = performance.now()
 						this.runUserFn("Change", { currentPkg, filePath, packagePath, stats }, change)
+						const timerEnd = performance.now()
+
+						timeout.min = timerEnd - timerStart
+						timeout.max = timeout.min + 1000
 					})
 				},
-				2000,
-				{ maxWait: 3000, leading: true }
+				timeout.min,
+				{ maxWait: timeout.max, leading: true }
 			)
 		)
 	}
@@ -160,40 +153,22 @@ abstract class Events {
 		fn?: (opts: ActionOpts) => Promise<void>
 	): void {
 		const relativePath = convertPath(this.root, options.filePath)
-		if (fn && isAsync(fn) === true) {
-			fn({ ...options }).then(() => {
-				this.EndLogger(eventName, relativePath)
-			})
-		} else {
-			const stdio: StdioOptions = this.config.noChildProcessLogs
-				? "ignore"
-				: ["inherit", "pipe", process.stderr]
+		/* Async check is done in parser */
 
-			//INFO: Experimental
-			process.env.FORCE_COLOR = "true"
-
-			const cp = spawn.sync(this.config.runScripts[0], this.config.runScripts.slice(1), {
-				env: process.env,
-				cwd: options.packagePath,
-				stdio,
-			})
-
-			if (cp.error) throw cp.error
-			else if (cp.stderr) throw new Error(String(cp.stderr))
-
-			this.EndLogger(eventName, relativePath)
+		if (fn)
+			fn({ ...options })
+				.then(() => {
+					this.logger.EndLogger(eventName, relativePath)
+				})
+				.catch((err) => {
+					throw err
+				})
+		else if (this.config?.runScripts.length > 0) {
+			const cp = this.spawner.Spawn(options)
+			this.spawner.PipeStream(cp)
+			this.spawner.AddListeners(cp, eventName, options)
+			this.spawner.CleanUp()
 		}
-	}
-
-	private EndLogger(eventName: string, path: string): void {
-		this.logger.log("Action Completed\n", "log")
-		this.logger.Custom(
-			(c) =>
-				c`${this.logger.raw(
-					{ message: eventName, spaceContent: true },
-					"success"
-				)} - ${this.logger.raw(path, "log")}\n`
-		)
 	}
 }
 

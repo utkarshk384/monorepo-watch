@@ -43,8 +43,10 @@ const external = [
   "@manypkg/get-packages",
   "os",
   "chalk",
+  "graceful-fs",
   "cross-spawn",
   "async-lock",
+  "ora"
 ];
 
 const config = {

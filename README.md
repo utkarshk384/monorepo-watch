@@ -1,13 +1,23 @@
-# Monorepo Watcher
+# Monorepo Watch
 
 NOTE: This is a work in progress. Currently it's in its alpha state.
 Any suggestions are warmly welcomed 😄.
 <br/>
 <br />
-A fully customizable file watcher for projects using lerna, yarn workspaces, and monorepos.
+A asynchronous, customizable file watcher for projects using lerna, yarn workspaces, and monorepos.
 
 <br/>
 <br/>
+
+## Recommended Usage
+It is recommended to use a terminal that has a at least level=2 support for colors([256 color support](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode))
+
+Terminals that support colors are:
+
+1. [Gitbash](https://git-scm.com/download/win)
+2. [Windows Terminal](https://www.microsoft.com/en-us/p/windows-terminal/9n0dx20hk701#activetab=pivot:overviewtab)
+3. [zsh](https://ohmyz.sh/#install)
+4. [bash](https://www.gnu.org/software/bash/)
 
 ## Installation
 
