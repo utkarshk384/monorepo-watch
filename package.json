@@ -7,6 +7,9 @@
     "file-watcher",
     "lerna-watcher"
   ],
+  "files": [
+    "dist"
+  ],
   "types": "dist/types",
   "name": "monorepo-watch",
   "version": "0.2.0",
