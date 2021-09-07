@@ -124,13 +124,15 @@ export type ArgsOptions = {
 }
 
 export interface IConfig {
-	options?: chokidar.WatchOptions
 	packageRoot: string
 	prefix?: string
 	include?: string[]
+	options?: chokidar.WatchOptions
 	actions?: EventAction & Dict
+	runScripts?: string[] | string
+	resolveDevDependencies?: boolean
+	resolvePeerDependencies?: boolean
 	noChildProcessLogs?: boolean
-	runScripts?: string[]
 }
 
 export type InternalConfig = Required<IConfig>

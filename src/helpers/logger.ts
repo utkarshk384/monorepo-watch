@@ -213,16 +213,23 @@ class LoggerWrapper extends LoggerBase {
 	}
 
 	public WithBackground(
-		primary: string,
-		secondary: string,
+		primary: string | LoggerActions,
+		secondary: string | LoggerActions,
 		level: LoggerLevel,
 		asyncFunc?: ArrowFunc
 	): void | ArrowFunc {
 		if (level === "debug" && MODE !== "debug") return
 
 		const execLogs: ArrowFunc = () => {
-			this.log({ message: primary, pad: true }, `${level}.bg`)
-			this.log({ message: ` - ${secondary}`, br: "after" }, "log")
+			const primaryMsg =
+				typeof primary === "string" ? { message: primary, pad: true } : { ...primary, pad: true }
+			const secondaryMsg =
+				typeof secondary === "string"
+					? ({ message: ` - ${secondary}`, br: "after" } as LoggerActions)
+					: secondary
+
+			this.log(primaryMsg, `${level}.bg`)
+			this.log(secondaryMsg, "log")
 		}
 
 		if (typeof asyncFunc === "function") {
@@ -240,12 +247,17 @@ class LoggerWrapper extends LoggerBase {
 		this.log({ message: "Options", pad: true, br: "after" }, "log")
 		this.log({ message: "a - Get Verbose watch list\tw - Get watched Files", br: "after" }, "log")
 		this.log({ message: "c - Clear the screen\t\tq - Stop and quit", br: "after" }, "log")
-		// this.log("r - Run change event\n", "log")
+		this.log("r - Run change event on last file\n", "log")
 	}
 
 	public PerformAction(path: string): void {
 		this.log({ message: "Performing Action", clr: true, br: "after" }, "log")
 		this.WithBackground("File Changed", `${path}`, "info")
+	}
+
+	public LogError(message: string): void {
+		this.WithBackground({ message: "Error", br: "before" }, message, "error")
+		process.exit(1)
 	}
 
 	public EndLogger(eventName: string, Path: string): void {

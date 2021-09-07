@@ -6,6 +6,9 @@ import { defaultConfig } from "./consts"
 import { isAsync } from "./utils"
 
 import type { ArgsOptions, DynamicLoad, IConfig, InternalConfig } from "src/types"
+import { Logger } from "./logger"
+
+const logger = Logger.getInstance()
 
 export const MergeNormalizeConfig = (
 	config: IConfig,
@@ -24,7 +27,7 @@ const normalizeConfig = (config: IConfig, packages: Package[], argv: ArgsOptions
 	if (!config.prefix) {
 		const name = packages[0].packageJson.name.split("/")
 		if (name.length === 0)
-			throw new Error("Couldn't get package name. Please specfiy one in the config file")
+			logger.LogError("Couldn't get package name. Please specfiy one in the config file")
 		config.prefix = name[0]
 	}
 
@@ -33,15 +36,20 @@ const normalizeConfig = (config: IConfig, packages: Package[], argv: ArgsOptions
 		Object.keys(config.actions).forEach((actionName) => {
 			const action = config.actions?.[actionName]
 			if (typeof action === "function" && !isAsync(action))
-				throw new Error(`Action ${actionName} is not async`)
+				logger.LogError(`Action ${actionName} is not async`)
 		})
 	}
 
-	/* Fixing string bug with includes */
-	if (!config.include) config.include = ["src"]
+	/* Normalize command */
+	if (config.runScripts && typeof config.runScripts == "string")
+		config.runScripts = config.runScripts.split(" ")
+
+	if (!config.include)
+		/* Fixing string bug with includes */
+		config.include = ["src"]
 
 	if (argv.run.length === 0 && config.runScripts?.length === 0 && !config.actions)
-		throw new Error("Please pass a command or a list of actions to the config file")
+		logger.LogError("Please pass a command or a list of actions to the config file")
 
 	/* Merge args to config file */
 	if (argv.run.length > 0) config.runScripts = argv.run // Gives CLI flags more priority

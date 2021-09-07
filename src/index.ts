@@ -2,8 +2,12 @@
 import { getPackagesSync } from "@manypkg/get-packages"
 
 import Resolver from "./core/resolver"
-import Watcher, { WatcherBase } from "./core/watcher"
-import { Config, argv, MergeNormalizeConfig } from "./helpers"
+import Watcher from "./core/watcher"
+import { Config, argv, MergeNormalizeConfig, Logger } from "./helpers"
+
+import type { Dict } from "./types"
+
+const logger = Logger.getInstance()
 
 const { root, packages } = getPackagesSync(Config.packageRoot || process.cwd())
 const config = MergeNormalizeConfig(Config, packages, argv)
@@ -22,10 +26,11 @@ packages.map((pkg) => {
 })
 
 if (packageJSON === undefined)
-	throw new Error(`Could not find package.json in ${config.packageRoot}`) // Throw error if not found
+	// process.exit will be called packageJSON is undefined
+	logger.LogError(`Could not find package.json in ${config.packageRoot}`)
 
 const resolve = Resolver({
-	packageJSON,
+	packageJSON: packageJSON as unknown as Dict<string, string>,
 	regex,
 	packages,
 	include: config.include,
@@ -36,11 +41,9 @@ const resolve = Resolver({
 */
 const include = resolve.ExtractDependencies()
 
-const watcher: WatcherBase = Watcher({
+Watcher({
 	root: root.dir,
 	include,
 	packages,
 	config,
 })
-
-export default watcher

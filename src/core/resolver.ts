@@ -5,6 +5,10 @@ import isGlob from "is-glob"
 import type { Package } from "@manypkg/get-packages"
 import type { Dict, ResolverConfig, ResolverType } from "../types"
 
+/**
+ * @class
+ * Class that resolves all dependencies and devDependencies for a package.
+ */
 class BaseResolvers {
 	private pkgJSON: Dict<string | Dict<unknown>>
 	private packages: Dict<Package>

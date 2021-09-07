@@ -12,15 +12,15 @@ export const defaultConfig: (argv: ArgsOptions) => IConfig = (argv: ArgsOptions)
 		options: {},
 		runScripts: [],
 		prefix: "",
+		resolveDevDependencies: true,
+		resolvePeerDependencies: true,
 		include: argv.include,
 		noChildProcessLogs: false,
 	} as IConfig)
 
 export const MODE: envModes = (process.env.MODE as envModes) || "info"
 
-if (!["info", "debug"].includes(MODE)) {
-	throw new Error(`Invalid MODE: ${MODE}`)
-}
+if (!["info", "debug"].includes(MODE)) throw new Error(`Invalid MODE: ${MODE}`)
 
 export const ANSI_REGEX =
 	// eslint-disable-next-line no-control-regex

@@ -1,6 +1,6 @@
 # Monorepo Watch
 
-NOTE: This is a work in progress. Currently it's in its alpha state.
+NOTE: This is a work in progress. Currently it's in its beta state.
 Any suggestions are warmly welcomed 😄.
 <br/>
 <br />
@@ -10,7 +10,7 @@ A asynchronous, customizable file watcher for projects using lerna, yarn workspa
 <br/>
 
 ## Recommended Usage
-It is recommended to use a terminal that has a at least level=2 support for colors([256 color support](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode))
+It is recommended to use terminals that has a at least level=2 support for colors([256 color support](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode))
 
 Terminals that support colors are:
 
@@ -81,45 +81,107 @@ NOTE: Only [CommonJS](https://medium.com/@cgcrutch18/commonjs-what-why-and-how-6
 //watcher.config.js
 
 
+/**
+ * Include types for ease of use
+ * @type {import("./dist/types/types").IConfig}
+ */
 module.exports = {
     /**
-     * @default {process.cwd()}
+     * @required
+     * @default process.cwd()
+     * 
      * The root of the current pacakge.
     */
-    root: string,
+    packageRoot: string,
 
     /**
-     * @default {`name` Field taken from `package.json`}
+     * @optional
+     * @default {`name` Field taken from one of the `package.json` 
+     * from the packages}
+     * 
      * The scoped package name.
      * Eg: @mypackage/pkg1, the prefix here is `@mypackge`
     */
     prefix: string,
 
     /**
-     * @default {["src"]}
+     * @optional
+     * @default ["src"]
+     * 
      * The directories to be watched inside the package folder.
+     * 
      * Globbing supported
     */
     include: string[],
 
     /**
-     * @default {{}}
+     * @optional
+     * @default {}
+     * 
      * Options that is directly passed to the `chokidar.watch` method.
-     * Please refer to the https://github.com/paulmillr/chokidar#api to see all the available options
+     * Please refer to the https://github.com/paulmillr/chokidar#api
+     * to see all the available options
     */
     options: chokidar.WatchOptions,
 
     /**
-     * @type {{
+     * @optional
+     * @type {
      *  add: (path: string, stats: fs.Stats) => any
      *  addDir: (path: string, stats: fs.Stats) => any
      *  change: (path: string, stats: fs.Stats) => any
      *  unlink: (path: string) => any
      *  unlinkDir: (path: string) => any
-     * }}
-     * @required
-     * This is the action that is to be performed when different events occur.
+     * }
+     * 
+     * This is the action that is to be performed when different events 
+     * occur.
     */
     actions: EventActionWatchActions,
+
+    /**
+     * @optional
+     * @default []
+     * 
+     * A command that will be ran on all file event changes.
+     * 
+     */
+    runScripts: string | string[],
+
+    /**
+     * @optional
+     * @default true
+     * 
+     * If true, the watcher will resolve dev dependencies and watch
+     * those as well. 
+     * 
+     * Note: The watcher will only resolve dependencies that are within
+     *       the package. It won't resolve any node_modules.
+     */
+    resolveDevDependencies: boolean,
+    
+    /**
+     * @optional
+     * @default true
+     * 
+     * If true, the watcher will resolve peer dependencies and watch
+     * those as well. 
+     * 
+     * Note: The watcher will only resolve dependencies that are within
+     *       the package. It won't resolve any node_modules.
+     */
+    resolvePeerDependencies: boolean,
+
+    /**
+     * @optional
+     * @default true
+     * 
+     * If true, the watcher will not pipe any logs to process.stdout 
+     * and set the stdio to "ignore". Only applicable for situations  
+     * where `runScripts` is defined.
+     * 
+     */
+    noChildProcessLogs: boolean,
+
 }
 ```

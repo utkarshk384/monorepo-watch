@@ -3,18 +3,16 @@ import { spawn } from "cross-spawn"
 import type { ChildProcess, StdioOptions } from "child_process"
 
 import { ANSI_REGEX, YARN_ERROR_MSGS } from "src/helpers/consts"
-import { Logger, convertPath, Observable, LoggerType } from "src/helpers"
+import { Logger, Observable, LoggerType } from "src/helpers"
 
 import type { ActionOpts, InternalConfig, TransformType } from "src/types"
 
 export class Spawner {
 	public err: Observable<boolean>
-	private root: string
 	private config: InternalConfig
 	private logger: LoggerType
 
-	constructor(root: string, config: InternalConfig) {
-		this.root = root
+	constructor(config: InternalConfig) {
 		this.config = config
 		this.logger = Logger.getInstance()
 
@@ -50,8 +48,7 @@ export class Spawner {
 			if (line.includes("error") && (await this.checkForError())) {
 				this.logger.WithBackground("Error", line, "error")
 
-				cp.kill()
-
+				cp.kill() // Kill process when an error occurs
 				done()
 				return
 			}
@@ -63,14 +60,8 @@ export class Spawner {
 			this.logger.WithBackground("Debug", "Couldn't pipe transformer to 'process.stdout'", "debug")
 	}
 
-	public AddListeners(cp: ChildProcess, eventName: string, options: ActionOpts): void {
-		const relativePath = convertPath(this.root, options.filePath)
-
+	public AddListeners(cp: ChildProcess): void {
 		cp.stderr?.on("Data", this.stderrCB)
-
-		cp.once("close", (code) => {
-			if (code === 0) this.logger.EndLogger(eventName, relativePath)
-		})
 	}
 
 	public CleanUp(): void {
