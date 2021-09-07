@@ -12,7 +12,7 @@
   ],
   "types": "dist/types",
   "name": "monorepo-watch",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A package for monorepos that watches a specific package and it's dependencies.",
   "module": "dist/main/index.js",
   "exports": {
