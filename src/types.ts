@@ -29,6 +29,8 @@ interface IBaseResolver {
 }
 
 export type ResolverConfig = {
+	resolveDevDependencies: boolean
+	resolvePeerDependencies: boolean
 	packageJSON: Dict
 	regex: RegExp
 	include: string[]

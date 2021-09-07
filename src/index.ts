@@ -30,6 +30,8 @@ if (packageJSON === undefined)
 	logger.LogError(`Could not find package.json in ${config.packageRoot}`)
 
 const resolve = Resolver({
+	resolveDevDependencies: config.resolveDevDependencies,
+	resolvePeerDependencies: config.resolvePeerDependencies,
 	packageJSON: packageJSON as unknown as Dict<string, string>,
 	regex,
 	packages,
@@ -37,7 +39,7 @@ const resolve = Resolver({
 })
 
 /* 
-  Watch Files
+Watch Files
 */
 const include = resolve.ExtractDependencies()
 

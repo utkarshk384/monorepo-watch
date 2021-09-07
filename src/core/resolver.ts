@@ -15,8 +15,10 @@ class BaseResolvers {
 	private regex: RegExp
 	private include: string[]
 	private paths: string[]
+	private resolveDep: { dev: boolean; peer: boolean }
 
 	constructor(config: ResolverConfig) {
+		this.resolveDep = { dev: config.resolveDevDependencies, peer: config.resolvePeerDependencies }
 		this.pkgJSON = config.packageJSON
 		this.regex = config.regex
 		this.paths = []
@@ -28,9 +30,9 @@ class BaseResolvers {
 	public ExtractDependencies(): string[] {
 		if (this.pkgJSON.dependencies)
 			this.resolveDependencies(this.pkgJSON.dependencies as Dict<unknown>)
-		else if (this.pkgJSON.devDependencies)
+		if (this.resolveDep.dev && this.pkgJSON.devDependencies)
 			this.resolveDependencies(this.pkgJSON.devDependencies as Dict<unknown>)
-		else if (this.pkgJSON.peerDependencies)
+		if (this.resolveDep.peer && this.pkgJSON.peerDependencies)
 			this.resolveDependencies(this.pkgJSON.peerDependencies as Dict<unknown>)
 
 		/* Include cwd into watch listd */
