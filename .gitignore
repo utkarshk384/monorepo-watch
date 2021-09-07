@@ -19,6 +19,8 @@ pids
 *.seed
 *.pid.lock
 
+# Change logs
+changelog-template.hbs
 
 # Coverage directory used by tools like istanbul
 coverage

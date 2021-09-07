@@ -83,8 +83,9 @@ NOTE: Only [CommonJS](https://medium.com/@cgcrutch18/commonjs-what-why-and-how-6
 
 /**
  * Include types for ease of use
- * @type {import("./dist/types/types").IConfig}
+ * @type {import('monorepo-watch/dist/types/types').IConfig}
  */
+
 module.exports = {
     /**
      * @required

@@ -5,5 +5,8 @@
   },
   "github": {
     "release": true
+  },
+  "hooks": {
+    "after:bump": "yarn auto-changelog -p --hide-credit --hide-empty-releases -t changelog-template.hbs"
   }
 }
