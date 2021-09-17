@@ -87,8 +87,8 @@ export class WatcherBase extends Events {
 					break
 
 				case "r":
-					this.instance.emit("change", this.runChangeEvent.file)
 					this.runChangeEvent.isActive = true
+					this.instance.emit("change", this.runChangeEvent.file)
 					break
 			}
 		}
