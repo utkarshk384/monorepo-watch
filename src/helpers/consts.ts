@@ -16,6 +16,7 @@ export const defaultConfig: (argv: ArgsOptions) => IConfig = (argv: ArgsOptions)
 		resolvePeerDependencies: true,
 		include: argv.include,
 		noChildProcessLogs: false,
+		autoShowOptions: false,
 	} as IConfig)
 
 export const MODE: envModes = (process.env.MODE as envModes) || "info"

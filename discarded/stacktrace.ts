@@ -74,8 +74,8 @@ export class StackTrace extends StackParsers {
 
 		reader.on("line", readLines)
 		this.isDone.onChange(() => {
-			console.log(this.isDone.getValue())
-			if (this.isDone.getValue()) {
+			console.log(this.isDone.value)
+			if (this.isDone.value) {
 				reader.removeListener("line", readLines)
 				reader.close()
 				process.stdout.write(this.formatStack(err, lines))

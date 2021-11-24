@@ -243,11 +243,15 @@ class LoggerWrapper extends LoggerBase {
 		return execLogs
 	}
 
-	public OptionsLogger(): void {
-		this.log({ message: "Options", pad: true, br: "after" }, "log")
-		this.log({ message: "a - Get Verbose watch list\tw - Get watched Files", br: "after" }, "log")
-		this.log({ message: "c - Clear the screen\t\tq - Stop and quit", br: "after" }, "log")
-		this.log("r - Run change event on last file\n", "log")
+	public OptionsLogger(optionToggler: boolean, autoOptions?: boolean): void {
+		if (!optionToggler && !autoOptions)
+			this.log({ message: "o - show options", br: "after", dim: true }, "log")
+		else {
+			this.log({ message: "Options", pad: true, br: "after" }, "log")
+			this.log({ message: "a - Get Verbose watch list\tw - Get watched Files", br: "after" }, "log")
+			this.log({ message: "c - Clear the screen\t\tq - Stop and quit", br: "after" }, "log")
+			this.log("r - Run change event on last file\n", "log")
+		}
 	}
 
 	public PerformAction(path: string): void {
@@ -260,12 +264,13 @@ class LoggerWrapper extends LoggerBase {
 		process.exit(1)
 	}
 
-	public EndLogger(eventName: string, Path: string): void {
+	public EndLogger(
+		eventName: string,
+		Path: string,
+		opts: { optionToggler: boolean; autoOptions: boolean }
+	): void {
 		this.WithBackground(eventName, `${Path}`, "success", () => {
-			setTimeout(
-				() => this.log({ message: "o - show options", br: "after", dim: true }, "log"),
-				250
-			)
+			setTimeout(() => this.OptionsLogger(opts.optionToggler, opts.autoOptions), 250)
 		})
 	}
 }

@@ -96,7 +96,7 @@ export class Spawner {
 	private async checkForError(): Promise<boolean> {
 		return new Promise((resolve) => {
 			setTimeout(() => {
-				if (this.err.getValue()) resolve(true)
+				if (this.err.value) resolve(true)
 				else resolve(true)
 			}, 500)
 		})

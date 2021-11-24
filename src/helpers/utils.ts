@@ -12,22 +12,23 @@ export function isAsync(fn?: unknown): boolean {
 }
 
 export class Observable<T> {
-	private value: T
+	public readonly value: T
 	public valueChangedCallback: ((val: T) => void) | null
 	constructor(value: T) {
 		this.value = value
 		this.valueChangedCallback = null
 	}
 
-	public setValue(value: T): void {
-		if (this.value != value) {
-			this.value = value
-			this.raiseChangedEvent(value)
-		}
-	}
+	public setValue(value: ((val: T) => T) | T): void {
+		let val: T
 
-	public getValue(): T {
-		return this.value
+		if (typeof value === "boolean") val = value
+		else val = (value as (val: T) => T)(this.value)
+
+		if (this.value != val) {
+			;(this.value as T) = val
+			this.raiseChangedEvent(val)
+		}
 	}
 
 	public onChange(callback: (value: T) => void): void {

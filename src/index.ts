@@ -12,10 +12,6 @@ const logger = Logger.getInstance()
 const { root, packages } = getPackagesSync(Config.packageRoot || process.cwd())
 const config = MergeNormalizeConfig(Config, packages, argv)
 
-/* Regex to match package names inside package.json */
-// eslint-disable-next-line no-useless-escape
-const regex = new RegExp(`${Config.prefix}\/[\\w-]+$`, "i")
-
 /* 
   Resolve caller package's package.json
 */
@@ -30,18 +26,16 @@ if (packageJSON === undefined)
 	logger.LogError(`Could not find package.json in ${config.packageRoot}`)
 
 const resolve = Resolver({
-	resolveDevDependencies: config.resolveDevDependencies,
-	resolvePeerDependencies: config.resolvePeerDependencies,
+	resolveDevDep: config.resolveDevDependencies,
+	resolvePeerDep: config.resolvePeerDependencies,
 	packageJSON: packageJSON as unknown as Dict<string, string>,
-	regex,
 	packages,
-	include: config.include,
 })
 
 /* 
 Watch Files
 */
-const include = resolve.ExtractDependencies()
+const include = [...resolve.ExtractDependencies(), ...config.include]
 
 Watcher({
 	root: root.dir,

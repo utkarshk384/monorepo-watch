@@ -29,11 +29,9 @@ interface IBaseResolver {
 }
 
 export type ResolverConfig = {
-	resolveDevDependencies: boolean
-	resolvePeerDependencies: boolean
+	resolveDevDep: boolean
+	resolvePeerDep: boolean
 	packageJSON: Dict
-	regex: RegExp
-	include: string[]
 	packages: Package[]
 }
 
@@ -135,6 +133,7 @@ export interface IConfig {
 	resolveDevDependencies?: boolean
 	resolvePeerDependencies?: boolean
 	noChildProcessLogs?: boolean
+	autoShowOptions?: boolean
 }
 
 export type InternalConfig = Required<IConfig>
