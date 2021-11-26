@@ -13,11 +13,16 @@ export abstract class WatcherBase {
 	public config: InternalConfig
 	public root: string
 
-	protected runChangeEvent: { file: string; isActive: boolean } // A helper to run change event on previous file for `r` option. It will also be used to aid `this.running`
+	// A helper to run change event on previous file for `r` option. It will also be used to aid `this.running`
+	protected runChangeEvent: { file: string; isActive: boolean }
 	protected ToggleOptions: Observable<boolean>
 
 	constructor(opts: WatcherConfig) {
 		this.instance = chokidar.watch(opts.include, { ...opts.config.options, ignoreInitial: true })
+		const { exclude } = opts.config
+		if ((Array.isArray(exclude) && exclude.length > 0) || typeof exclude === "string")
+			this.instance.unwatch(exclude)
+
 		this.logger = Logger.getInstance()
 		this.config = opts.config
 		this.root = opts.root
@@ -138,7 +143,6 @@ export abstract class WatcherBase {
 		}
 
 		this.ToggleOptions.onChange((val) => {
-			console.log(`Val ${val}`)
 			if (val) {
 				if (process.stdin.listeners("data").length > 0) process.stdin.off("data", baseKeyPressEvent)
 				process.stdin.on("data", activeKeypressEvent)
@@ -150,10 +154,6 @@ export abstract class WatcherBase {
 		})
 
 		this.ToggleOptions.setValue(true)
-
-		// super
-		// 	.setup()
-		// 	.then(() => this.logger.WithBackground("Debug", "Sucessfully added event listeners", "debug"))
 	}
 
 	/**

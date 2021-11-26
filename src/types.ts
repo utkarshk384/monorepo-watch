@@ -127,6 +127,7 @@ export interface IConfig {
 	packageRoot: string
 	prefix?: string
 	include?: string[]
+	exclude?: string | string[]
 	options?: chokidar.WatchOptions
 	actions?: EventAction & Dict
 	runScripts?: string[] | string

@@ -2,7 +2,7 @@ import path from "path"
 import readline from "readline"
 import fs from "graceful-fs"
 
-import { STACK_REGEX } from "src/helpers/consts"
+import { STACK_REGEX } from "./src/helpers/consts"
 import { Observable } from "src/helpers/utils"
 import Logger from "src/helpers/logger"
 
@@ -74,7 +74,6 @@ export class StackTrace extends StackParsers {
 
 		reader.on("line", readLines)
 		this.isDone.onChange(() => {
-			console.log(this.isDone.value)
 			if (this.isDone.value) {
 				reader.removeListener("line", readLines)
 				reader.close()

@@ -54,6 +54,9 @@ const normalizeConfig = (config: IConfig, packages: Package[], argv: ArgsOptions
 	/* Merge args to config file */
 	if (argv.run.length > 0) config.runScripts = argv.run // Gives CLI flags more priority
 
+	/* Check if exclude exists */
+	if (!config.exclude) config.exclude = []
+
 	return config
 }
 
