@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+# [0.3.0](https://github.com/utkarshk384/monorepo-watch/compare/0.2.1...0.3.0) (27 November 2021)
+
+- Fixed an issue that caused dependencies to not cause an change event [`a5b7745`](https://github.com/utkarshk384/monorepo-watch/commit/a5b7745efe3b7b911a92cc6b0cae68fb870a2c3d)
+- Fixed an issue that caused events to be bubbled [`fac3bf1`](https://github.com/utkarshk384/monorepo-watch/commit/fac3bf1baa41392343c3ffa21e4d7d661c361cf4)
+- Added auto-changelog [`f6c6107`](https://github.com/utkarshk384/monorepo-watch/commit/f6c610798103095fd8cdf0ae7c6bb5587cb2c48f)
+
 # [0.2.1](https://github.com/utkarshk384/monorepo-watch/compare/0.2.0...0.2.1) (7 September 2021)
 
 - Fixed issue that caused whole project dir to be in production [`458a901`](https://github.com/utkarshk384/monorepo-watch/commit/458a9012b075b3f0cc4ea162167c8c6a00d58d68)
